@@ -25,9 +25,8 @@ RUN /opt/jboss/wildfly/bin/standalone.sh --admin-only & \
 	&& keytool -genkeypair -alias wildfly -storetype jks -keyalg RSA -keysize 2048 -keypass jbosswildfly -keystore /opt/jboss/wildfly/standalone/configuration/identity.jks -storepass jbosswildfly -dname "CN=HuBo,OU=wildfly,O=jboss,L=WH,ST=HB,C=CN" -validity 36500 -v \
 	&& $JBOSS_CLI "module add --name=com.mysql --resources=$MYSQL_CONNECTOR/$MYSQL_CONNECTOR-bin.jar --dependencies=javax.api\,javax.transaction.api" \
 	&& $JBOSS_CLI "/subsystem=datasources/jdbc-driver=mysql:add(driver-name=mysql,driver-module-name=com.mysql,driver-xa-datasource-class-name=com.mysql.jdbc.jdbc2.optional.MysqlXADataSource)" \
-	&& $JBOSS_CLI "/core-service=management/security-realm=HttpsRealm/:add" \
-	&& $JBOSS_CLI "/core-service=management/security-realm=HttpsRealm/server-identity=ssl:add(keystore-path=identity.jks,keystore-relative-to=jboss.server.config.dir,keystore-password=jbosswildfly, alias=wildfly)" \
-	&& $JBOSS_CLI "/subsystem=undertow/server=default-server/https-listener=defaults:add(socket-binding=https,security-realm=HttpsRealm)" \
+	&& $JBOSS_CLI "/core-service=management/security-realm=ManagementRealm/server-identity=ssl:add(keystore-path=identity.jks,keystore-relative-to=jboss.server.config.dir,keystore-password=jbosswildfly, alias=wildfly)" \
+	&& $JBOSS_CLI "/subsystem=undertow/server=default-server/https-listener=defaults:add(socket-binding=https,security-realm=ManagementRealm)" \
 	&& $JBOSS_CLI command=:shutdown \
 	&& rm -rf $MYSQL_CONNECTOR.tar.gz \
 	&& rm -rf $MYSQL_CONNECTOR \
