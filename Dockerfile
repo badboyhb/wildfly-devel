@@ -21,6 +21,7 @@ ENV JBOSS_CLI /opt/jboss/wildfly/bin/jboss-cli.sh -c
 RUN /opt/jboss/wildfly/bin/standalone.sh --admin-only & \
 	curl -LO http://dev.mysql.com/get/Downloads/Connector-J/$MYSQL_CONNECTOR.tar.gz \
 	&& tar xf $MYSQL_CONNECTOR.tar.gz \
+	&& sleep 10 \
 	&& $JBOSS_CLI "module add --name=com.mysql --resources=$MYSQL_CONNECTOR/$MYSQL_CONNECTOR-bin.jar --dependencies=javax.api\,javax.transaction.api" \
 	&& $JBOSS_CLI "/subsystem=datasources/jdbc-driver=mysql:add(driver-name=mysql,driver-module-name=com.mysql,driver-xa-datasource-class-name=com.mysql.jdbc.jdbc2.optional.MysqlXADataSource)" \
 	&& $JBOSS_CLI command=:shutdown \
