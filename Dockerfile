@@ -1,4 +1,4 @@
-# Version 0.0.1
+# Version 0.0.2
 
 FROM jboss/wildfly
 
@@ -15,33 +15,18 @@ RUN yum update -y && yum -y install openssh-server && yum clean all \
 	&& echo "root:jboss" | chpasswd
 
 ENV MYSQL_CONNECTOR mysql-connector-java-5.1.38
+ENV JBOSS_CLI /opt/jboss/wildfly/bin/jboss-cli.sh -c
 
 RUN curl -LO http://dev.mysql.com/get/Downloads/Connector-J/$MYSQL_CONNECTOR.tar.gz \
-	&& tar xf $MYSQL_CONNECTOR.tar.gz \
-	&& mkdir -p /opt/jboss/wildfly/modules/com/mysql/main \
-	&& mv $MYSQL_CONNECTOR/$MYSQL_CONNECTOR-bin.jar /opt/jboss/wildfly/modules/com/mysql/main/ \
+	&& tar xf $MYSQL_CONNECTOR.tar.gz
+ 
+RUN /opt/jboss/wildfly/bin/standalone.sh --admin-only & sleep 10 \
+	&& $JBOSS_CLI "module add --name=com.mysql --resources=$MYSQL_CONNECTOR/$MYSQL_CONNECTOR-bin.jar --dependencies=javax.api\,javax.transaction.api" \
+	&& $JBOSS_CLI "/subsystem=datasources/jdbc-driver=mysql:add(driver-name=mysql,driver-module-name=com.mysql,driver-xa-datasource-class-name=com.mysql.jdbc.jdbc2.optional.MysqlXADataSource)" \
+	&& $JBOSS_CLI command=:shutdown \
 	&& rm -rf $MYSQL_CONNECTOR.tar.gz \
 	&& rm -rf $MYSQL_CONNECTOR
 
-RUN echo -e "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n" \
-	"<module xmlns=\"urn:jboss:module:1.3\" name=\"com.mysql\">\n" \
-	"\t<resources>\n" \
-	"\t\t<resource-root path=\"$MYSQL_CONNECTOR-bin.jar\"/>\n" \
-	"\t</resources>\n" \
-	"\t<dependencies>\n" \
-	"\t\t<module name=\"javax.api\"/>\n" \
-	"\t\t<module name=\"javax.transaction.api\"/>\n" \
-	"\t</dependencies>\n" \
-	"</module>" \
-	> /opt/jboss/wildfly/modules/com/mysql/main/module.xml \
-	&& echo -e "\t\t\t<driver name=\"mysql\" module=\"com.mysql\">\n" \
-	"\t\t\t\t<driver-class>com.mysql.jdbc.Driver</driver-class>\n" \
-	"\t\t\t\t<xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>\n" \
-    "\t\t\t</driver>" \
-    > mysql.driver \
-    && sed -i '/<drivers>/r mysql.driver' \
-    /opt/jboss/wildfly/standalone/configuration/standalone.xml \
-    && rm mysql.driver
 
 VOLUME /opt/jboss/wildfly/standalone/deployments
 
