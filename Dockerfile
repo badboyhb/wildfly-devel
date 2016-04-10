@@ -30,12 +30,15 @@ RUN /opt/jboss/wildfly/bin/standalone.sh --admin-only & \
 	&& $JBOSS_CLI "/subsystem=undertow/server=default-server/https-listener=defaults:add(socket-binding=https,security-realm=HttpsRealm)" \
 	&& $JBOSS_CLI command=:shutdown \
 	&& rm -rf $MYSQL_CONNECTOR.tar.gz \
-	&& rm -rf $MYSQL_CONNECTOR
+	&& rm -rf $MYSQL_CONNECTOR \
+	&& rm -rf /opt/jboss/wildfly/standalone/configuration/standalone_xml_history
 
 
 VOLUME /opt/jboss/wildfly/standalone/deployments
 
+
 EXPOSE 22
+EXPOSE 8443
 EXPOSE 9990
 
 CMD /usr/sbin/sshd -D
